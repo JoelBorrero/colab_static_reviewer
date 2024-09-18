@@ -1,0 +1,14 @@
+version: '3.8'
+
+services:
+  fastapi:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: colab_static_reviewer
+    ports:
+      - "3000:80"
+    volumes:
+      - ./uploaded_files:/app/uploaded_files
+    environment:
+      - PYTHONUNBUFFERED=1
