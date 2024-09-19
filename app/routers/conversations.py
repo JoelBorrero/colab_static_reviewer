@@ -1,7 +1,7 @@
 from fastapi import APIRouter, File, HTTPException, UploadFile
 
 from app.utils.services import save_to_files, load_colab_file
-from app.services import check_for_snake_case_functions
+from app.services import check_for_snake_case_functions, check_prompt_block
 
 
 router = APIRouter(prefix="/conversations")
@@ -25,7 +25,9 @@ async def review_conversation(file: UploadFile = File(...), save_file: bool = Fa
 
     colab_file = load_colab_file(file=file)
 
+    prompt_errors = check_prompt_block(colab_file)
     snake_case_errors = check_for_snake_case_functions(colab_file)
     return {
+        "prompt_errors": prompt_errors,
         "snake_case_errors": snake_case_errors
     }
