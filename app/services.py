@@ -54,6 +54,76 @@ def check_for_snake_case_functions(colab_file: NotebookNode) -> list[StructureEr
     return errors
 
 
+def check_for_test_cases(colab_file: NotebookNode) -> list[StructureError]:
+    """
+    Check if the Google Colab file has the correct test cases structure
+
+    :param colab_file: The Google Colab file to be checked
+    :return: A list of errors if the file does not have the correct test cases structure
+    """
+    def get_top_comment() -> str:
+        output = lines[index - 1]
+        comment_lines = 1
+        while index - comment_lines > 0:
+            comment_lines += 1
+            prev = lines[index - comment_lines]
+            if sharp in prev:
+                output = f"{prev}{output.replace(sharp, '').strip()}"
+            else:
+                break
+        return output
+
+    errors = []
+    blocks = [Block(cell) for cell in colab_file.cells]
+    test_blocks = [block for block in blocks if block.type in [BlockType.PYTHON_TEST, BlockType.SWIFT_TEST]]
+
+    if not test_blocks:
+        return [
+            StructureError(
+                block=blocks[0],
+                line_number=0,
+                line_text="",
+                error_message="There are no test cases in the file",
+            )
+        ]
+
+    for block in test_blocks:
+        lines = block.content.split("\n")
+        uses_test_framework = lines[0].startswith("import unittest") or lines[0].startswith("import XCTest")
+        current_test = None if uses_test_framework else 0
+        sharp = "#" if block.type == BlockType.PYTHON_TEST else "//"
+        for index, line in enumerate(lines):
+            if uses_test_framework:
+                if line.startswith("class Test"):
+                    current_test = 0
+                elif current_test is not None and ("  def test" in line or "func test" in line):
+                    current_test += 1
+                    comment = get_top_comment()
+                    if f"{sharp} Test Case {current_test}: " not in comment:
+                        errors.append(
+                            StructureError(
+                                block=block,
+                                line_number=index - 1,
+                                line_text=comment,
+                                error_message=f"Expected '{sharp} Test Case {current_test}: ...' before the test case",
+                            )
+                        )
+            else:
+                if "assert" in line:
+                    current_test += 1
+                    comment = get_top_comment()
+                    if f"{sharp} Test Case {current_test}: " not in comment:
+                        errors.append(
+                            StructureError(
+                                block=block,
+                                line_number=index - 1,
+                                line_text=comment,
+                                error_message=f"Expected '{sharp} Test Case {current_test}: ...' before the test case",
+                            )
+                        )
+    return errors
+
+
 def check_prompt_block(colab_file: NotebookNode) -> list[StructureError]:
     """
     Check if the Google Colab file has a prompt block

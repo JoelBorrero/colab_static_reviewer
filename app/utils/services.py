@@ -33,8 +33,10 @@ def is_python_code(cell: NotebookNode) -> bool:
         elif "class " in cell.source:
             class_lines = [line for line in lines if "class " in line]
             for line in class_lines:
-                if not line.startswith("class ") or not line.endswith(":"):
+                if not line.strip().startswith("class ") or not line.endswith(":"):
                     return False
+            return True
+        elif "assert " in cell.source:
             return True
     return False
 
