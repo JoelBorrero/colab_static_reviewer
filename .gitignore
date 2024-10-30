@@ -1,2 +1,4 @@
 .idea
+postgres_data
 uploaded_files
+.env

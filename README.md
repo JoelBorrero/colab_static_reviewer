@@ -2,14 +2,8 @@
 
 This project, named **Colab File Reviewer**, is designed to validate Google Colab files against predefined criteria. It ensures your colab files follow:
 
-1. 📝 Correct **prompt block** format.
-2. 🐍 **Snake case** function names.
-3. ✅ Proper **test cases** structure.
-
-**🌟 Future Enhancements (Coming Soon)**
-4. 📘 Validate the existence of `# Solution\nText...` block.
-5. 🔍 Validate typing in function parameters (e.g., `def func(x: list[int]) -> int:`) for proper typing and import statements.
-6. 🚫 Ensure there are no `print` statements within the Colab file.
+1. Ask to GPT model to solve a specific task, returning the examples, solution and explanation.
+2. Ask to GPT model to translate Swift code to Python code.
 
 ## 📦 Project Structure
 ```
@@ -135,3 +129,11 @@ Feel free to fork this repository and make changes. Pull requests are welcome! F
 For any questions or inquiries, feel free to reach out to me at [joel.b@turing.com](mailto:joel.b@turing.com).
 
 Enjoy coding! 🚀👩‍💻👨‍💻
+
+### Deprecated, now on Chrome Extension:
+1. 📝 Correct **prompt block** format.
+2. 🐍 **Snake case** function names.
+3. ✅ Proper **test cases** structure.
+4. 📘 Validate the existence of `# Solution\nText...` block.
+5. (Soon) 🔍 Validate typing in function parameters (e.g., `def func(x: list[int]) -> int:`) for proper typing and import statements.
+6. (Soon) 🚫 Ensure there are no `print` statements within the Colab file.

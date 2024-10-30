@@ -4,6 +4,7 @@ from pydantic import BaseModel
 from app.utils.services import is_python_code, is_swift_code
 
 
+# Code blocks
 class BlockType:
     PROMPT = "Prompt"
     SOLUTION = "Solution"
@@ -80,3 +81,12 @@ class StructureError(BaseModel):
             line_text=line_text,
             error_message=f"{error_message}.\nBlock: {block.type}\nLine {line_number}: {line_text}"
         )
+        self.block = block
+
+
+# Request bodies
+class SolveTaskRequest(BaseModel):
+    prompt: str
+
+class TranslateCodeRequest(BaseModel):
+    code: str

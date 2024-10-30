@@ -4,23 +4,6 @@ from fastapi import UploadFile
 from nbformat.notebooknode import NotebookNode
 
 
-def load_colab_file(file_path: str = None, file: UploadFile = None) -> NotebookNode:
-    """
-    Load a Google Colab file
-
-    :param file_path: The path of the file to be loaded
-    :param file: The file to be loaded
-    :return: The content of the file
-    """
-    if file:
-        return nbformat.read(file.file, as_version=4)
-    elif file_path:
-        with open(file_path, "r") as file:
-            return nbformat.read(file, as_version=4)
-    else:
-        raise ValueError("Either file_path or file must be provided")
-
-
 def is_python_code(cell: NotebookNode) -> bool:
     if cell.cell_type == "code":
         lines = cell.source.split("\n")
@@ -57,6 +40,23 @@ def is_swift_code(cell: NotebookNode) -> bool:
                     return False
             return True
     return False
+
+
+def load_colab_file(file_path: str = None, file: UploadFile = None) -> NotebookNode:
+    """
+    Load a Google Colab file
+
+    :param file_path: The path of the file to be loaded
+    :param file: The file to be loaded
+    :return: The content of the file
+    """
+    if file:
+        return nbformat.read(file.file, as_version=4)
+    elif file_path:
+        with open(file_path, "r") as file:
+            return nbformat.read(file, as_version=4)
+    else:
+        raise ValueError("Either file_path or file must be provided")
 
 
 def save_to_files(file: UploadFile, path: str = None) -> None:
