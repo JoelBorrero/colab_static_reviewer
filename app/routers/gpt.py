@@ -12,6 +12,7 @@ async def solve(body: SolveTaskRequest):
     Solve a task
     """
     res = solve_task(body.prompt)
+    print(res)
     return res
 
 
@@ -21,4 +22,5 @@ async def translate(body: TranslateCodeRequest):
     Translate from Swift to Python
     """
     res = translate_to_python(body.code)
+    print(res)
     return res

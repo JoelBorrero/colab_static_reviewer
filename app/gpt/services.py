@@ -2,11 +2,12 @@ import json
 
 from openai import OpenAI
 
+from app.constants import GPTModel
 
 client = OpenAI()
 
 
-def solve_task(prompt: str) -> dict[str, str]:
+def solve_task(prompt: str, model: GPTModel = GPTModel.GPT_4o) -> dict[str, str]:
     messages = [
         {
             "role": "system",
@@ -172,7 +173,7 @@ def solve_task(prompt: str) -> dict[str, str]:
 
     try:
         response = client.chat.completions.create(
-            model="gpt-4o",
+            model=model,
             messages=messages,
             temperature=1,
             max_tokens=1322,
@@ -189,7 +190,7 @@ def solve_task(prompt: str) -> dict[str, str]:
         return f"Error: {e}"
 
 
-def translate_to_python(swift_code: str) -> dict[str, str]:
+def translate_to_python(swift_code: str, model: GPTModel = GPTModel.GPT_4o) -> dict[str, str]:
     messages = [
         {
             "role": "system",
@@ -223,7 +224,7 @@ def translate_to_python(swift_code: str) -> dict[str, str]:
 
     try:
         response = client.chat.completions.create(
-            model="gpt-4o",
+            model=model,
             messages=messages,
             temperature=1,
             max_tokens=1599,
