@@ -87,6 +87,20 @@ class StructureError(BaseModel):
 # Request bodies
 class SolveTaskRequest(BaseModel):
     prompt: str
+    language: str
+class RewriteRequest(BaseModel):
+    text: str
 
 class TranslateCodeRequest(BaseModel):
     code: str
+
+class CompareResponsesRequest(BaseModel):
+    prompt: str
+    model_a: str
+    model_b: str
+    output: str | None
+    language: str
+
+class ReEvaluateResponsesRequest(CompareResponsesRequest):
+    comparison_response: str
+    requested_changes: str

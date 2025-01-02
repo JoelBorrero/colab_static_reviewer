@@ -13,7 +13,7 @@ services:
     environment:
       - PYTHONUNBUFFERED=1
     env_file:
-      - dev.env
+      - .env
   postgres:
     image: postgres
     container_name: colab_static_reviewer_postgres
