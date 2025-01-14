@@ -10,6 +10,7 @@ services:
       - "3000:80"
     volumes:
       - ./uploaded_files:/app/uploaded_files
+      - ./screenshots:/app/screenshots
     environment:
       - PYTHONUNBUFFERED=1
     env_file:

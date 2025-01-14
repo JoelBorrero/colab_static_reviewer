@@ -52,6 +52,23 @@ class _Prompts:
         response += "</examples>"
         return response
 
+    def generate_test_code_examples(self, language: Languages):
+        """
+        Generates the examples for the test code prompt.
+
+        Returns:
+            The examples for the test code prompt.
+        """
+        examples = self.data["generate_test_code"].get(language, self.data["generate_test_code"][_Prompts.Languages.JAVASCRIPT])
+        response = "<examples>"
+        for example in examples:
+            response += "<example>"
+            for key, value in example.items():
+                response += f"<{key.upper()}>{value.replace('\\n', '\n').replace("\\'", "\'")}</{key.upper()}>"
+            response += "</example>"
+        response += "</examples>"
+        return response
+
     def generate_turns_examples(self, language: Languages):
         """
         Generates the examples for the generate turns prompt.
@@ -69,10 +86,14 @@ class _Prompts:
         response += "</examples>"
         return response
 
-    SYSTEM_GENERATE_TURNS = """Given the use case and user profile, you will generate a conversation of 3 user questions with a code assistant. The assistant responses will be single line placeholders with the idea of the solution in order to develop the next turn, do not provide the complete assistant response.\nFocus on providing realistic, specific scenarios when asking for help or implementations. Instead of generic prompts like "How can I...?" or "Example...", describe a particular situation and request precise solutions or guidance. Some examples to start the conversation:\n\"\"\"\n- Design a Python function that extracts the X'th shortest URL from a list of URLs, considering only URLs that have a path component and a domain component. If no such URL is found, it should return an empty string.\n- Implement a function generate_balanced_expression_recursively that generates all possible balanced expressions using the following characters: ("(", ")", "+", "-") . The function should return a list of strings. Each string should represent a valid balanced expression. Hint: The base case is when there are no characters.\n\"\"\"\nThe main point is try to be creative about the prompt by providing a specific scenario and specific instructions rather than a generic stuff., trying to make questions easy to answer. Only if the use case requires using a text response, you can generate a question where the assistant do not provide code, could be a theorical concern, suggestions about improvements, or something related."""
+    def get_system_compare(self) -> str:
+        return self.data["system"]["compare"]
 
-    SYSTEM_COMPARE = """You are a code reviewer. The user will give you the prompt and the response of two models, you need to evaluate and grade each model's response based on the categories: Instruction Following, Truthfulness, Conciseness, Content Safety, and Overall Satisfaction. Important: Provide a paragraph with a brief explanation on why the chosen score was assigned, highlighting specific aspects of the response that influenced the rating for each category, both positive and negative. Use clear language to ensure the justification for instruction following is understandable and informative.\nEvaluate the two model responses, Model A and Model B, based on these criteria:\n- Instruction following: No issues, minor issues, major issues. Refers to following the prompt's requirements. This includes:\n1. Using the specified algorithm.\n2. Calculating the requested output.\n3. Adhering to the stated approach.\nNote: Errors or incorrect results in the code do not affect Instruction. If the response does not follow the explicit prompt requirements, it fails on Instruction, regardless of correctness.\n- Truthfulness: No issues, minor issues, major issues. It ensures that what the response describes aligns with what the code does. This means:\n1. The implementation and the description must match without contradictions.\n2. The output should be correct and consistent with the intended logic.\nNote: Even if the response doesn't meet the prompt's requirements, Truthfulness is intact as long as the code and the response match.\n- Conciseness: Just right, too verbose, too short.\n- Content Safety: No issues, minor issues, major issues.\n- Overall satisfaction: Amazing, Pretty good, Okay, Pretty bad, Bad.\n\nAfter evaluating both models, compare with the previous criteria and choose a final preference using this scale:\n- Model A is significantly better than Model B\n- Model A is better than Model B\n- Model A is slightly better than Model B\n- Model A is negligibly better than Model B\n- Model B is negligibly better than Model A\n- Model B is slightly better than Model A\n- Model B is better than Model A\n- Model B is significantly better than Model A\n\nPreference Explanation: Briefly justify your choice in a single paragraph, considering the following:\n- How well each model followed the user's request.\n- Which model's explanation or code was more accurate, clear, and adaptable.\n- Any differences in style, tone, or usability.\n\nConsiderations:\n- If both models meet expectations, consider small differences in clarity or user-friendliness.\n- For code, consider robustness, best practices, and flexibility.\n- Focus on which response provides a better user experience overall.\n- When writing a rationale for a Minor issue, mention why it is good enough not to be a Major Issue and what It accomplishes\n- Use creative, vivid and uncommon verbs and talk like a human, not a robot, using short paragraphs.\n- Do not refer to the user as "you", instead use "the user".\n- When reviewing each one, do not refer to each model as "Model A does...", instead just "The model..." or "The response...". Use "Model A" and "Model B" just for the final comparisson, for the other rationales just treat each one as an individual case.\n- When evaluating the next answer, do not mention the first one again, it is a new independent one.\n- Do not punish Instruction Following if it is an issue of missing import or a simple syntax error\n- Punish both Instruction Following and Truthfulness. If it is a logical issue, Truthfulness should be punished at least as much as Instruction Following or more if there are additional issues.\n\nOutput in JSON format with keys: “model_a", "model_b” and "comparison". Each model has a list of the evaluated keys with "score" and "comment". The comparison also is a dict with "score" and "comment"."""
+    def get_system_generate_test_code(self) -> str:
+        return self.data["system"]["generate_test_code"]
 
+    def get_system_generate_turns(self) -> str:
+        return self.data["system"]["generate_turns"]
 
 class AnthropicService:
     def __init__(self):
@@ -98,7 +119,7 @@ class AnthropicService:
             model=model,
             max_tokens=1000,
             temperature=0.3,
-            system=self.prompts.SYSTEM_GENERATE_TURNS,
+            system=self.prompts.get_system_generate_turns(),
             messages=[
                 {
                     "role": "user",
@@ -157,7 +178,7 @@ class AnthropicService:
             model=model,
             max_tokens=1520,
             temperature=0.3,
-            system=self.prompts.SYSTEM_COMPARE,
+            system=self.prompts.get_system_compare(),
             messages=[
                 {
                     "role": "user",
@@ -176,7 +197,41 @@ class AnthropicService:
                 }
             ],
         )
-        return json.loads(message.content[0].text)
+        try:
+            return json.loads(message.content[0].text)
+        except json.decoder.JSONDecodeError:
+            return message.content[0].text
+
+    def generate_test_code(
+        self,
+        question: str,
+        response: str,
+        model: ClaudeModel = ClaudeModel.SONET_3_5,
+        language: _Prompts.Languages = _Prompts.Languages.PYTHON
+    ) -> dict:
+        # return "Here's a minimal test code to verify the functionality of the TokenManager implementation:\n\n```javascript\nimport jwt from 'jsonwebtoken';\n\n// First, import all the classes from the response\n// (Assuming they're in the same file or properly exported)\n\n// Test function\nasync function runTests() {\n    console.log('Starting TokenManager Tests\\n');\n    \n    const secretKey = 'test-secret-key';\n    const tokenManager = new TokenManager(secretKey);\n    \n    // Test 1: Token Generation and Validation\n    console.log('Test 1: Token Generation and Validation');\n    try {\n        const payload = {\n            userId: 123,\n            ipAddress: '127.0.0.1'\n        };\n        \n        const token = tokenManager.generateToken(payload);\n        console.log('Generated Token:', token);\n        \n        const validatedPayload = tokenManager.validateToken(token, payload.ipAddress);\n        console.log('Validated Payload:', validatedPayload);\n        console.log('Test 1: ✅ Success\\n');\n    } catch (error) {\n        console.log('Test 1: ❌ Failed -', error.message, '\\n');\n    }\n    \n    // Test 2: Rate Limiting\n    console.log('Test 2: Rate Limiting');\n    try {\n        const payload = {\n            userId: 456,\n            ipAddress: '127.0.0.2'\n        };\n        \n        // Generate first token (should succeed)\n        const token1 = tokenManager.generateToken(payload);\n        console.log('First token generated successfully');\n        \n        // Try to generate second token (should fail due to rate limit)\n        try {\n            const token2 = tokenManager.generateToken(payload);\n            console.log('Test 2: ❌ Failed - Rate limit not working\\n');\n        } catch (error) {\n            console.log('Expected rate limit error:', error.message);\n            console.log('Test 2: ✅ Success\\n');\n        }\n    } catch (error) {\n        console.log('Test 2: ❌ Failed -', error.message, '\\n');\n    }\n    \n    // Test 3: Token Blacklisting\n    console.log('Test 3: Token Blacklisting');\n    try {\n        const payload = {\n            userId: 789,\n            ipAddress: '127.0.0.3'\n        };\n        \n        const token = tokenManager.generateToken(payload);\n        console.log('Generated token for blacklist test');\n        \n        // Blacklist the token\n        tokenManager.blacklistToken(token);\n        console.log('Token blacklisted');\n        \n        // Try to validate blacklisted token\n        try {\n            tokenManager.validateToken(token, payload.ipAddress);\n            console.log('Test 3: ❌ Failed - Blacklist not working\\n');\n        } catch (error) {\n            console.log('Expected blacklist error:', error.message);\n            console.log('Test 3: ✅ Success\\n');\n        }\n    } catch (error) {\n        console.log('Test 3: ❌ Failed -', error.message, '\\n');\n    }\n}\n\n// Run the tests\nrunTests().catch(console.error);\n```\n\nTo run this test, you'll need to:\n\n1. Install the required dependency:\n```bash\nnpm install jsonwebtoken\n```\n\n2. Save both the implementation and test code in files with `.js` extension\n\n3. Run the test using Node.js with ES modules enabled:\n```bash\nnode --experimental-modules test.js\n```\n\nThis test code verifies three main functionalities:\n1. Token generation and validation\n2. Rate limiting functionality\n3. Token blacklisting\n\nThe tests are designed to be minimal while still covering the core functionality of the TokenManager facade pattern implementation. Each test provides clear output indicating success or failure, making it easy to verify that the implementation is working as expected."
+        message = self.client.messages.create(
+            model=model,
+            max_tokens=4096,
+            temperature=0,
+            system=self.prompts.get_system_generate_test_code(),
+            messages=[
+                {
+                    "role": "user",
+                    "content": [
+                        {
+                            "type": "text",
+                            "text": self.prompts.generate_test_code_examples(language),
+                        },
+                        {
+                            "type": "text",
+                            "text": f"<question>{question}</question><response>{response}</response>"
+                        }
+                    ]
+                }
+            ],
+        )
+        return message.content[0].text
 
     def reevaluate_responses(
         self,

@@ -85,15 +85,18 @@ class StructureError(BaseModel):
 
 
 # Request bodies
+## Translations 
+class RewriteRequest(BaseModel):
+    text: str
+
 class SolveTaskRequest(BaseModel):
     prompt: str
     language: str
-class RewriteRequest(BaseModel):
-    text: str
 
 class TranslateCodeRequest(BaseModel):
     code: str
 
+## Comparison
 class CompareResponsesRequest(BaseModel):
     prompt: str
     model_a: str
@@ -101,6 +104,20 @@ class CompareResponsesRequest(BaseModel):
     output: str | None
     language: str
 
+class GenerateTestCodeRequest(BaseModel):
+    prompt: str
+    answer: str
+
 class ReEvaluateResponsesRequest(CompareResponsesRequest):
     comparison_response: str
     requested_changes: str
+
+class UploadScreenshot(BaseModel):
+    turn: int
+    model: str
+    image: str
+    suffix: str | None = None
+
+class UploadScreenshotsRequest(BaseModel):
+    task_id: str
+    images: list[UploadScreenshot]

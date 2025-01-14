@@ -4,6 +4,7 @@ from app.llm.anthropic_service import AnthropicService
 from app.llm.openai_service import OpenAIService
 from app.models import (
     CompareResponsesRequest,
+    GenerateTestCodeRequest,
     ReEvaluateResponsesRequest,
     RewriteRequest,
     SolveTaskRequest,
@@ -79,5 +80,11 @@ async def reevaluate(body: ReEvaluateResponsesRequest):
         body.requested_changes,
         body.language,
     )
+    print(res)
+    return res
+
+@router.post("/comparison/generate-test-code")
+async def generate_test_code(body: GenerateTestCodeRequest):
+    res = anthropic.generate_test_code(body.prompt, body.answer)
     print(res)
     return res
