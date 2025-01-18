@@ -98,7 +98,7 @@ class _Prompts:
 class AnthropicService:
     def __init__(self):
         self.client = anthropic.Anthropic()
-        self.prompts = _Prompts()
+        self.prompts = _Prompts()  # TODO: Build json from the Anthropic generated code (XML)
 
     def generate_turns(
         self, prompt: str, model: ClaudeModel = ClaudeModel.SONET_3_5, language: _Prompts.Languages = _Prompts.Languages.PYTHON
