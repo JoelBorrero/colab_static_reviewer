@@ -1,12 +1,17 @@
-# 📝 Colab File Reviewer
+# 📝 Colab Static Reviewer
 
-This project, named **Colab File Reviewer**, is designed to validate Google Colab files against predefined criteria. It ensures your colab files follow:
+This project, named **Colab Static Reviewer**, is designed to validate Google Colab files against predefined criteria. It ensures your colab files follow:
 
 1. Ask to GPT model to solve a specific task, returning the examples, solution and explanation.
 2. Ask to GPT model to translate Swift code to Python code.
+3. Ask to Anthropic model to generate a conversation turns.
+4. Ask to Anthropic model to compare the generated responses for both models.
+5. Ask to Anthropic model to re-evaluate the responses if there is a change requested.
+6. Ask to Anthropic model to generate the required file to test the provided solution.
+7. Create Google Drive folders and upload screenshots of each turn in a generated dropdown area.
 
 ## 📦 Project Structure
-```
+```plaintext
 .
 ├── app/
 │   ├── routers/
@@ -29,15 +34,15 @@ This project, named **Colab File Reviewer**, is designed to validate Google Cola
 
 - [Docker](https://docs.docker.com/get-docker/)
 - [Docker Compose](https://docs.docker.com/compose/install/)
-- [Make](https://www.gnu.org/software/make/)
+- [Make](https://www.gnu.org/software/make/) (Optional)
 
 ### 🐳 Running with Docker
 
 1. **Clone the Repository**:
 
     ```sh
-    git clone <repository-url>
-    cd colab-file-reviewer
+    git clone https://github.com/JoelBorrero/colab_static_reviewer.git
+    cd colab_static_reviewer
     ```
 
 2. **Build Docker Image**:
@@ -129,6 +134,19 @@ Feel free to fork this repository and make changes. Pull requests are welcome! F
 For any questions or inquiries, feel free to reach out to me at [joel.b@turing.com](mailto:joel.b@turing.com).
 
 Enjoy coding! 🚀👩‍💻👨‍💻
+
+### Features
+
+- **Google Colab Formatting Checker**:
+  - Automatically checks if your Colab notebooks are formatted correctly.
+  - Translate (static code, not AI) the `unittest` cases from Swift to Python.
+- **RLHF Helper**: 
+  - Copy prompts with a single click.
+  - Generate conversation turns using AI in the backend.
+  - Compare AI-generated responses in the backend (Claude 3.5).
+  - Re-evaluate responses and generate test code to verify functionality.
+  - Automatically paste content from the backend into the DOM for easy manual review.
+- **Google Drive Integration**: Create folders in Google Drive and upload screenshots of each turn in a generated dropdown area.
 
 ### Deprecated, now on Chrome Extension:
 1. 📝 Correct **prompt block** format.

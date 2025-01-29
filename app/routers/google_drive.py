@@ -3,10 +3,9 @@ from fastapi import APIRouter
 
 from app.google_drive.services import GoogleDriveService
 
-
 router = APIRouter(prefix="/gdrive")
-
 gdrive = GoogleDriveService()
+
 
 @router.post("/create-folders")
 async def create_folders(task_id: str):
@@ -18,6 +17,7 @@ async def create_folders(task_id: str):
     """
     response = gdrive.create_task_folders(task_id)
     return response
+
 
 @router.post("/upload-screenshots")
 async def upload_screenshots(body: UploadScreenshotsRequest):
